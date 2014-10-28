@@ -43,7 +43,7 @@ func Read(path string) (records CSVData, err error) {
 	if err != nil {
 		return data, err
 	}
-	data.Results = results
+    data.Results = append(data.Results, results[1:]...) // always skip the header
 	data.Src = path
 	data.Header = results[0] // I guess we are assuming there is always a header
 	data.fieldIndex = makeFieldIndex(data.Header)

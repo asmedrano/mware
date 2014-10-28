@@ -5,18 +5,12 @@ import (
 	"testing"
 )
 
-func TestInitDB(t *testing.T) {
-	defer rmDB()
-	initDB("/tmp/test.db")
-	// TODO: This needs an assertion
-}
 
 // Dont like to test both but it makes sense to me
 func TestInsertAndQuery(t *testing.T) {
-	initDB("/tmp/test.db")
 	db, _ := getDb("/tmp/test.db")
-	defer rmDB()
 	defer db.Close()
+	defer rmDB("/tmp/test.db")
 	r := RowVal{
 		Date:        "7/15/2014",
 		Amount:      "100",
@@ -34,6 +28,6 @@ func TestInsertAndQuery(t *testing.T) {
 
 }
 
-func rmDB() {
-	os.Remove("/tmp/test.db")
+func rmDB(path string) {
+	os.Remove(path)
 }

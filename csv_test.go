@@ -9,7 +9,7 @@ import (
 // Test Read method
 func TestRead(t *testing.T) {
 	writeSampleSimple(t)
-	defer cleanup()
+	defer cleanupTestFiles()
 	data, _ := Read("/tmp/testdir/simple.csv")
 	if len(data.Header) == 0 {
 		t.Error("Header should not be 0")
@@ -23,7 +23,8 @@ func TestRead(t *testing.T) {
 		t.Error("This field does not exist and should return false")
 	}
 
-	val, _ := data.GetVal("Date", data.Results[1])
+	val, _ := data.GetVal("Date", data.Results[0])
+
 	if val != "7/28/14" {
 		t.Error("Date value is not correct")
 	}
@@ -49,6 +50,6 @@ func writeTestFile(data []byte, filename string) error {
 }
 
 // Clean up test garbage files
-func cleanup() {
+func cleanupTestFiles() {
 	os.RemoveAll("/tmp/testdir")
 }

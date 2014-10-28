@@ -16,6 +16,13 @@ type RowVal struct {
 
 func getDb(dbname string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", dbname)
+	// Try to create table
+	// SQLite does not have a storage class set aside for storing dates and/or times. Instead, the built-in Date And Time Functions of SQLite are capable of storing dates and times as TEXT, REAL, or INTEGER values https://www.sqlite.org/lang_datefunc.html
+	sql := `create table if not exists transactions (id integer not null primary key, date integer, amount real, description text, category text)`
+	_, err = db.Exec(sql)
+	if err != nil {
+		log.Printf("%q: %s\n", err, sql)
+	}
 	return db, err
 }
 
@@ -55,20 +62,4 @@ func getRows(db *sql.DB) []RowVal {
 		results = append(results, r)
 	}
 	return results
-}
-
-// initialize the DB with its corresponding tables
-// SQLite does not have a storage class set aside for storing dates and/or times. Instead, the built-in Date And Time Functions of SQLite are capable of storing dates and times as TEXT, REAL, or INTEGER values https://www.sqlite.org/lang_datefunc.html
-func initDB(dbname string) {
-	db, err := getDb(dbname)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-	sql := `create table transactions (id integer not null primary key, date integer, amount real, description text, category text)`
-	_, err = db.Exec(sql)
-	if err != nil {
-		log.Printf("%q: %s\n", err, sql)
-		return
-	}
 }

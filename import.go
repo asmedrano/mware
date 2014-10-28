@@ -18,18 +18,37 @@ type SimpleImporter struct {
 func (s *SimpleImporter) Import(path string) {
 	data, err := Read(path)
 	if err != nil {
-		log.Print("Error importing " + path)
+		log.Print("Error importing " + path, "\n", err)
 		return
 	}
 
-	s.Save(data)
+	vals := []RowVal{}
+
+	// Transform data from simple to our nomalized version
+	for i := range data.Results {
+		date, _ := data.GetVal("Date", data.Results[i])
+		amount, _ := data.GetVal("Amount", data.Results[i])
+		description, _ := data.GetVal("Description", data.Results[i])
+		category, _ := data.GetVal("Category", data.Results[i])
+		vals = append(vals, RowVal{
+			Date:        date,
+			Amount:      amount,
+			Description: description,
+			Category:    category,
+		})
+	}
+
+	s.Save(vals)
 }
 
-func (s *SimpleImporter) Save(data CSVData) {
+func (s *SimpleImporter) Save(data []RowVal) {
 	db, err := getDb("/tmp/transactions.db") // TODO: This should end up in some sort of config var
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer db.Close()
+	// save the rows
+	insertRows(db, data)
 
 }
