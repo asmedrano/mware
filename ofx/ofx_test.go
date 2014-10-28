@@ -7,7 +7,7 @@ import (
 )
 
 func TestCreateCSVFromOFX(t *testing.T) {
-	writeSampleCapOneOFX(t)
+    writeSampleCapOneOFX(t)
 	ConvertToCSV("/tmp/testdir/capone.ofx", "/tmp/testdir/capone.ofx.cvs")
 	f, err := ioutil.ReadFile("/tmp/testdir/capone.ofx.cvs")
 	if err != nil {

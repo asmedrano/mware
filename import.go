@@ -73,18 +73,11 @@ func (s *CapOneImporter) Import(ofxPath string) {
 	vals := []RowVal{}
 
 	// Transform data from simple to our nomalized version
+    //FIELDS: TRNTYPE, DTPOSTED, TRNAMT, FITID, NAME, MEMO
 	for i := range data.Results {
-		date, _ := data.GetVal("Date", data.Results[i])
-		description, _ := data.GetVal("Description", data.Results[i])
-		credit, _ := data.GetVal("Credit", data.Results[i])
-		debit, _ := data.GetVal("Debit", data.Results[i])
-		amount := ""
-		if credit != "" {
-			amount = credit
-		} else {
-			amount = "-" + debit
-		}
-
+		date, _ := data.GetVal("DTPOSTED", data.Results[i])
+		description, _ := data.GetVal("NAME", data.Results[i])
+		amount, _ := data.GetVal("TRNAMT", data.Results[i])
 		vals = append(vals, RowVal{
 			Date:        date,
 			Amount:      amount,
