@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-
 // Dont like to test both but it makes sense to me
 func TestInsertAndQuery(t *testing.T) {
 	db, _ := getDb("/tmp/test.db")
@@ -16,11 +15,11 @@ func TestInsertAndQuery(t *testing.T) {
 		Amount:      "100",
 		Description: "TestTrans",
 		Category:    "Test",
+		Key:         "123",
 	}
 
 	v := []RowVal{r}
 	insertRows(db, v)
-
 	rows := getRows(db)
 	if rows[0].Id != "1" {
 		t.Error("Expected id to be 1")
