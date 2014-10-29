@@ -25,7 +25,7 @@ func getDb(dbname string) (*sql.DB, error) {
 		log.Printf("%q: %s\n", err, sql)
 	}
 
-	sql = `create index if not exists keyidx on transactions (key)` 
+	sql = `create index if not exists keyidx on transactions (key)`
 	_, err = db.Exec(sql)
 	if err != nil {
 		log.Printf("%q: %s\n", err, sql)
@@ -34,7 +34,12 @@ func getDb(dbname string) (*sql.DB, error) {
 }
 
 // insert a list of rowvals into db in a single db transaction. The table happens to also be called transactions
-func insertRows(db *sql.DB, rv []RowVal) {
+// Lets assume the same transaction will never be duplicated in a single import
+// TODO: POSSIBLE BUG HERE (see last comment)
+func insertRows(db *sql.DB, rv []RowVal) (in int, ign int){
+    inserted := 0 // how many recored where actually inserted
+    ignored := 0 // how many where ignored
+    exists := false
 	tx, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
@@ -46,12 +51,21 @@ func insertRows(db *sql.DB, rv []RowVal) {
 	}
 	defer stmt.Close()
 	for i := range rv {
-		_, err = stmt.Exec(rv[i].Date, rv[i].Amount, rv[i].Description, rv[i].Category, rv[i].Key)
-		if err != nil {
-			log.Fatal(err)
-		}
+	    // each record should have a unique key, so that we dont insert the same transaction in twice. We need to check for it first
+        exists, _ = keyExists(db, rv[i].Key)
+        if !exists {
+            _, err = stmt.Exec(rv[i].Date, rv[i].Amount, rv[i].Description, rv[i].Category, rv[i].Key)
+            if err != nil {
+                log.Fatal(err)
+            }
+            inserted += 1
+        }else{
+            log.Printf("Key %v Exists", rv[i].Key)
+            ignored += 1
+        }
 	}
 	tx.Commit()
+	return inserted, ignored
 }
 
 // Return all rows wrapped as []RowVal
