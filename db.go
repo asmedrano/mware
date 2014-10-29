@@ -12,7 +12,7 @@ type RowVal struct {
 	Amount      string
 	Description string
 	Category    string
-    Key         string // a compound Key that should uniquely identify this entry
+	Key         string // a compound Key that should uniquely identify this entry
 }
 
 func getDb(dbname string) (*sql.DB, error) {
@@ -20,6 +20,12 @@ func getDb(dbname string) (*sql.DB, error) {
 	// Try to create table
 	// SQLite does not have a storage class set aside for storing dates and/or times. Instead, the built-in Date And Time Functions of SQLite are capable of storing dates and times as TEXT, REAL, or INTEGER values https://www.sqlite.org/lang_datefunc.html
 	sql := `create table if not exists transactions (id integer not null primary key, date integer, amount real, description text, category text, key text unique)`
+	_, err = db.Exec(sql)
+	if err != nil {
+		log.Printf("%q: %s\n", err, sql)
+	}
+
+	sql = `create index if not exists keyidx on transactions (key)` 
 	_, err = db.Exec(sql)
 	if err != nil {
 		log.Printf("%q: %s\n", err, sql)
@@ -51,7 +57,6 @@ func insertRows(db *sql.DB, rv []RowVal) {
 // Return all rows wrapped as []RowVal
 func getRows(db *sql.DB) []RowVal {
 	results := []RowVal{}
-	defer db.Close()
 	rows, err := db.Query("select * from transactions")
 	if err != nil {
 		log.Fatal(err)
@@ -63,4 +68,25 @@ func getRows(db *sql.DB) []RowVal {
 		results = append(results, r)
 	}
 	return results
+}
+
+func keyExists(db *sql.DB, key string) (bool, error) {
+
+    stmt, err := db.Prepare("select key from transactions where key = ?")
+	if err != nil {
+	    log.Println(err)
+	    return false, err
+	}
+	defer stmt.Close()
+    var k string
+	err = stmt.QueryRow(key).Scan(&k)
+	if err != nil {
+		// this will most likely be "sql: no rows in result set"
+		return false, err
+	}
+	if k == key {
+        return true, nil
+    }else{
+        return false,  nil
+    }
 }
