@@ -47,9 +47,12 @@ func TestInsertAndQuery(t *testing.T) {
 	v := []RowVal{r}
 	insertRows(db, v)
 	rows := getRows(db)
+
 	if rows[0].Id != "1" {
 		t.Error("Expected id to be 1")
 	}
+
+    rows[0].GetDate() // TODO: this needs an assertion
 
 }
 
