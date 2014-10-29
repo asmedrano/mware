@@ -10,6 +10,7 @@ import (
 	"time"
 	"strings"
 	"strconv"
+	"database/sql"
 )
 
 type Importer interface {
@@ -23,7 +24,7 @@ type SimpleImporter struct {
 }
 
 // In theory maybe something could happen here but I think all importers will look like this
-func (s *SimpleImporter) Import(path string) {
+func (s *SimpleImporter) Import(path string, db *sql.DB) {
 	data, err := Read(path)
 	if err != nil {
 		log.Print("Error importing "+path, "\n", err)
@@ -48,17 +49,10 @@ func (s *SimpleImporter) Import(path string) {
 		})
 	}
 
-	s.Save(vals)
+	s.Save(db, vals)
 }
 
-func (s *SimpleImporter) Save(data []RowVal) {
-	db, err := getDb("/tmp/transactions.db") // TODO: This should end up in some sort of config var
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Close()
-	// save the rows
+func (s *SimpleImporter) Save(db *sql.DB, data []RowVal) {
 	insertRows(db, data)
 
 }
@@ -85,7 +79,7 @@ type CapOneImporter struct {
 }
 
 // Cap One importores should convert .ofx dumps to csv first
-func (s *CapOneImporter) Import(ofxPath string) {
+func (s *CapOneImporter) Import(ofxPath string, db *sql.DB) {
 	tempPath := fmt.Sprintf("/tmp/%v.csv", path.Base(ofxPath))
 	ofx.ConvertToCSV(ofxPath, tempPath)
 	data, err := Read(tempPath)
@@ -112,19 +106,11 @@ func (s *CapOneImporter) Import(ofxPath string) {
 		})
 	}
 
-	s.Save(vals)
+	s.Save(db, vals)
 }
 
-func (s *CapOneImporter) Save(data []RowVal) {
-	db, err := getDb("/tmp/transactions.db") // TODO: This should end up in some sort of config var
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Close()
-	// save the rows
+func (s *CapOneImporter) Save(db *sql.DB, data []RowVal) {
 	insertRows(db, data)
-
 }
 
 func (s *CapOneImporter) Date(raw string) int64 {

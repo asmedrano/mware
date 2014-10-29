@@ -8,7 +8,7 @@ func TestSimpleImport(t *testing.T) {
 	writeSampleSimple(t)
 	db, _ := getDb("/tmp/transactions.db")
 	i := SimpleImporter{}
-	i.Import("/tmp/testdir/simple.csv")
+	i.Import("/tmp/testdir/simple.csv", db)
     rows := getRows(db)
     if rows[0].Amount != "-100" {
         t.Error("Amount != -100")
@@ -23,7 +23,7 @@ func TestCapImport(t *testing.T) {
 	writeSampleCapOneOFX(t)
 	db, _ := getDb("/tmp/transactions.db")
     i := CapOneImporter{}
-    i.Import("/tmp/testdir/capone.ofx")
+    i.Import("/tmp/testdir/capone.ofx", db)
     rows := getRows(db)
     if rows[0].Amount != "-7.99" {
         t.Error("Amount != -7.99") 

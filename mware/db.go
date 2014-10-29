@@ -21,7 +21,7 @@ func (r *RowVal) GetDate() time.Time {
      return time.Unix(r.Date, 0)
 }
 
-func getDb(dbname string) (*sql.DB, error) {
+func GetDb(dbname string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", dbname)
 	// Try to create table
 	// SQLite does not have a storage class set aside for storing dates and/or times. Instead, the built-in Date And Time Functions of SQLite are capable of storing dates and times as TEXT, REAL, or INTEGER values https://www.sqlite.org/lang_datefunc.html
@@ -37,6 +37,12 @@ func getDb(dbname string) (*sql.DB, error) {
 		log.Printf("%q: %s\n", err, sql)
 	}
 	return db, err
+}
+
+// this is only here so i dont have to go back and change all the references to this
+// TODO: Change this
+func getDb(dbname string) (*sql.DB, error) {
+    return GetDb(dbname)
 }
 
 // insert a list of rowvals into db in a single db transaction. The table happens to also be called transactions
