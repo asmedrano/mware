@@ -8,11 +8,14 @@ import (
 	"log"
 	"path"
 	"time"
+	"strings"
+	"strconv"
 )
 
 type Importer interface {
 	Import() // Extract and Transform Data here
 	Save()
+	Date() int64 // should return UNIX time
 }
 
 type SimpleImporter struct {
@@ -37,11 +40,11 @@ func (s *SimpleImporter) Import(path string) {
 		category, _ := data.GetVal("Category", data.Results[i])
 		recorded_at, _ := data.GetVal("Category", data.Results[i])
 		vals = append(vals, RowVal{
-			Date:        date,
+			Date:        s.Date(date),
 			Amount:      amount,
 			Description: description,
 			Category:    category,
-            Key: s.MakeKey(date+recorded_at+amount+description),
+			Key:         s.MakeKey(date + recorded_at + amount + description),
 		})
 	}
 
@@ -64,6 +67,17 @@ func (s *SimpleImporter) MakeKey(raw string) string {
 	h := md5.New()
 	io.WriteString(h, raw)
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func (s *SimpleImporter) Date(raw string) int64 {
+    // raw looks like: 7/28/14
+    dp := strings.Split(raw, "/")
+    year, _:= strconv.Atoi("20"+dp[2]) // lets assume all these transactions happend in the year 2000+
+    month, _:= strconv.Atoi(dp[0]) // lets assume all these transactions happend in the year 2000+
+    day, _:= strconv.Atoi(dp[1]) // lets assume all these transactions happend in the year 2000+
+    t:= time.Date(year, getMonth(month), day, 0, 0, 0, 0, time.UTC)
+	return t.Unix()
+
 }
 
 type CapOneImporter struct {
@@ -90,7 +104,7 @@ func (s *CapOneImporter) Import(ofxPath string) {
 		amount, _ := data.GetVal("TRNAMT", data.Results[i])
 		key, _ := data.GetVal("FITID", data.Results[i])
 		vals = append(vals, RowVal{
-			Date:        date,
+			Date:        s.Date(date),
 			Amount:      amount,
 			Description: description,
 			Category:    "", // TODO: need to parse description to get this
@@ -111,4 +125,35 @@ func (s *CapOneImporter) Save(data []RowVal) {
 	// save the rows
 	insertRows(db, data)
 
+}
+
+func (s *CapOneImporter) Date(raw string) int64 {
+    // raw looks like: 20140930170000.000
+    year, _:= strconv.Atoi(raw[:4]) // lets assume all these transactions happend in the year 2000+
+    month, _:= strconv.Atoi(raw[4:6]) // lets assume all these transactions happend in the year 2000+
+    day, _:= strconv.Atoi(raw[6:8]) // lets assume all these transactions happend in the year 2000+
+    t:= time.Date(year, getMonth(month), day, 0, 0, 0, 0, time.UTC)
+	return t.Unix()
+
+}
+
+
+
+func getMonth(num int) time.Month {
+    var m time.Month
+    switch num{
+        case 1: m = time.January
+        case 2: m = time.February
+        case 3: m = time.March
+        case 4: m = time.April
+        case 5: m = time.May
+        case 6: m = time.June
+        case 7: m = time.July
+        case 8: m = time.August
+        case 9: m = time.September
+        case 10: m = time.October
+        case 11: m = time.November
+        case 12: m = time.December
+    }
+    return m
 }

@@ -3,6 +3,7 @@ package mware
 import (
 	"os"
 	"testing"
+	"time"
 )
 
 func TestKeyExists(t *testing.T) {
@@ -10,7 +11,7 @@ func TestKeyExists(t *testing.T) {
 	defer db.Close()
 	//defer rmDB("/tmp/test.db")
 	r := RowVal{
-		Date:        "7/15/2014",
+		Date:        time.Now().Unix(),
 		Amount:      "100",
 		Description: "TestTrans",
 		Category:    "Test",
@@ -36,7 +37,7 @@ func TestInsertAndQuery(t *testing.T) {
 	defer db.Close()
 	defer rmDB("/tmp/test.db")
 	r := RowVal{
-		Date:        "7/15/2014",
+		Date:        time.Now().Unix(),
 		Amount:      "100",
 		Description: "TestTrans",
 		Category:    "Test",
@@ -58,7 +59,7 @@ func TestSameKeyInsert(t *testing.T) {
 	defer db.Close()
 	defer rmDB("/tmp/test.db")
 	r := RowVal{
-		Date:        "7/15/2014",
+		Date:         time.Now().Unix(),
 		Amount:      "100",
 		Description: "TestTrans",
 		Category:    "Test",

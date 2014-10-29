@@ -8,7 +8,7 @@ import (
 
 type RowVal struct {
 	Id          string
-	Date        string
+	Date        int64
 	Amount      string
 	Description string
 	Category    string
