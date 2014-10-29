@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
+	"time"
 )
 
 type RowVal struct {
@@ -13,6 +14,11 @@ type RowVal struct {
 	Description string
 	Category    string
 	Key         string // a compound Key that should uniquely identify this entry
+}
+
+// Return a time.Time from the RowVal.Date int64
+func (r *RowVal) GetDate() time.Time {
+     return time.Unix(r.Date, 0)
 }
 
 func getDb(dbname string) (*sql.DB, error) {
@@ -36,10 +42,10 @@ func getDb(dbname string) (*sql.DB, error) {
 // insert a list of rowvals into db in a single db transaction. The table happens to also be called transactions
 // Lets assume the same transaction will never be duplicated in a single import
 // TODO: POSSIBLE BUG HERE (see last comment)
-func insertRows(db *sql.DB, rv []RowVal) (in int, ign int){
-    inserted := 0 // how many recored where actually inserted
-    ignored := 0 // how many where ignored
-    exists := false
+func insertRows(db *sql.DB, rv []RowVal) (in int, ign int) {
+	inserted := 0 // how many recored where actually inserted
+	ignored := 0  // how many where ignored
+	exists := false
 	tx, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
@@ -51,18 +57,18 @@ func insertRows(db *sql.DB, rv []RowVal) (in int, ign int){
 	}
 	defer stmt.Close()
 	for i := range rv {
-	    // each record should have a unique key, so that we dont insert the same transaction in twice. We need to check for it first
-        exists, _ = keyExists(db, rv[i].Key)
-        if !exists {
-            _, err = stmt.Exec(rv[i].Date, rv[i].Amount, rv[i].Description, rv[i].Category, rv[i].Key)
-            if err != nil {
-                log.Fatal(err)
-            }
-            inserted += 1
-        }else{
-            log.Printf("Key %v Exists", rv[i].Key)
-            ignored += 1
-        }
+		// each record should have a unique key, so that we dont insert the same transaction in twice. We need to check for it first
+		exists, _ = keyExists(db, rv[i].Key)
+		if !exists {
+			_, err = stmt.Exec(rv[i].Date, rv[i].Amount, rv[i].Description, rv[i].Category, rv[i].Key)
+			if err != nil {
+				log.Fatal(err)
+			}
+			inserted += 1
+		} else {
+			log.Printf("Key %v Exists", rv[i].Key)
+			ignored += 1
+		}
 	}
 	tx.Commit()
 	return inserted, ignored
@@ -86,21 +92,21 @@ func getRows(db *sql.DB) []RowVal {
 
 func keyExists(db *sql.DB, key string) (bool, error) {
 
-    stmt, err := db.Prepare("select key from transactions where key = ?")
+	stmt, err := db.Prepare("select key from transactions where key = ?")
 	if err != nil {
-	    log.Println(err)
-	    return false, err
+		log.Println(err)
+		return false, err
 	}
 	defer stmt.Close()
-    var k string
+	var k string
 	err = stmt.QueryRow(key).Scan(&k)
 	if err != nil {
 		// this will most likely be "sql: no rows in result set"
 		return false, err
 	}
 	if k == key {
-        return true, nil
-    }else{
-        return false,  nil
-    }
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
