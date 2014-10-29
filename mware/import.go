@@ -64,11 +64,11 @@ func (s *SimpleImporter) MakeKey(raw string) string {
 }
 
 func (s *SimpleImporter) Date(raw string) int64 {
-    // raw looks like: 7/28/14
+    // raw looks like: 2014/08/04
     dp := strings.Split(raw, "/")
-    year, _:= strconv.Atoi("20"+dp[2]) // lets assume all these transactions happend in the year 2000+
-    month, _:= strconv.Atoi(dp[0]) // lets assume all these transactions happend in the year 2000+
-    day, _:= strconv.Atoi(dp[1]) // lets assume all these transactions happend in the year 2000+
+    year, _:= strconv.Atoi(dp[0]) // lets assume all these transactions happend in the year 2000+
+    month, _:= strconv.Atoi(dp[1]) // lets assume all these transactions happend in the year 2000+
+    day, _:= strconv.Atoi(dp[2]) // lets assume all these transactions happend in the year 2000+
     t:= time.Date(year, getMonth(month), day, 0, 0, 0, 0, time.UTC)
 	return t.Unix()
 

@@ -31,6 +31,7 @@ func TestRead(t *testing.T) {
 
 }
 
+// The Date format doesnt match the real thing wich looks like this 2014/08/04. Its ok cause tests wont fail and until mately it gets converted properly 
 func writeSampleSimple(t *testing.T) {
 	s := `Date,Recorded at,Scheduled for,Amount,Activity,Pending,Raw description,Description,Category folder,Category,Street address,City,     *State,Zip,Latitude,Longitude,Memo
 7/28/14,7/28/14 7:41,,-100,ACH,FALSE,Electronic Funds Transfer ,Transfer,Financial,Credit Card Payment,,,,,,,
