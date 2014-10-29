@@ -72,11 +72,11 @@ func insertRows(db *sql.DB, rv []RowVal) (in int, ign int) {
 			}
 			inserted += 1
 		} else {
-			log.Printf("Key %v Exists", rv[i].Key)
 			ignored += 1
 		}
 	}
 	tx.Commit()
+	log.Printf("Inserted %v records, %v duplicates skipped", inserted, ignored)
 	return inserted, ignored
 }
 

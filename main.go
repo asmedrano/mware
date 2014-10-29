@@ -22,12 +22,16 @@ func main() {
 	iT := strings.ToLower(*importType)
 
 	if iT == "simple" {
-	    log.Println("Import Simple Bank csv")
+	    log.Println("Importing Simple Bank CSV...")
 		i := mware.SimpleImporter{}
 		i.Import(*docPath, db)
 	} else if iT == "capone" {
+	    log.Println("Importing CapOne OFX...")
+
 		i := mware.CapOneImporter{}
 		i.Import(*docPath, db)
 	}
+
+	log.Print("Done!")
 
 }
