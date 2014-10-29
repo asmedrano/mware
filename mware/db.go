@@ -14,6 +14,7 @@ type RowVal struct {
 	Description string
 	Category    string
 	Key         string // a compound Key that should uniquely identify this entry
+	Bank        string // the Source bank
 }
 
 // Return a time.Time from the RowVal.Date int64
@@ -25,7 +26,7 @@ func GetDb(dbname string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", dbname)
 	// Try to create table
 	// SQLite does not have a storage class set aside for storing dates and/or times. Instead, the built-in Date And Time Functions of SQLite are capable of storing dates and times as TEXT, REAL, or INTEGER values https://www.sqlite.org/lang_datefunc.html
-	sql := `create table if not exists transactions (id integer not null primary key, date integer, amount real, description text, category text, key text unique)`
+	sql := `create table if not exists transactions (id integer not null primary key, date integer, amount real, description text, category text, key text unique, bank text)`
 	_, err = db.Exec(sql)
 	if err != nil {
 		log.Printf("%q: %s\n", err, sql)
@@ -56,7 +57,7 @@ func insertRows(db *sql.DB, rv []RowVal) (in int, ign int) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	sql := "insert into transactions (date, amount, description, category, key) values(?,?,?,?,?)"
+	sql := "insert into transactions (date, amount, description, category, key, bank) values(?,?,?,?,?,?)"
 	stmt, err := tx.Prepare(sql)
 	if err != nil {
 		log.Fatal(err)
@@ -66,7 +67,7 @@ func insertRows(db *sql.DB, rv []RowVal) (in int, ign int) {
 		// each record should have a unique key, so that we dont insert the same transaction in twice. We need to check for it first
 		exists, _ = keyExists(db, rv[i].Key)
 		if !exists {
-			_, err = stmt.Exec(rv[i].Date, rv[i].Amount, rv[i].Description, rv[i].Category, rv[i].Key)
+			_, err = stmt.Exec(rv[i].Date, rv[i].Amount, rv[i].Description, rv[i].Category, rv[i].Key, rv[i].Bank)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -90,7 +91,7 @@ func getRows(db *sql.DB) []RowVal {
 	defer rows.Close()
 	for rows.Next() {
 		r := RowVal{}
-		rows.Scan(&r.Id, &r.Date, &r.Amount, &r.Description, &r.Category, &r.Key)
+		rows.Scan(&r.Id, &r.Date, &r.Amount, &r.Description, &r.Category, &r.Key, &r.Bank)
 		results = append(results, r)
 	}
 	return results

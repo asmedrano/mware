@@ -9,26 +9,27 @@ import (
 func TestKeyExists(t *testing.T) {
 	db, _ := getDb("/tmp/test.db")
 	defer db.Close()
-	//defer rmDB("/tmp/test.db")
+	defer rmDB("/tmp/test.db")
 	r := RowVal{
 		Date:        time.Now().Unix(),
 		Amount:      "100",
 		Description: "TestTrans",
 		Category:    "Test",
 		Key:         "ABC",
+		Bank:        "test",
 	}
 
 	v := []RowVal{r}
 	insertRows(db, v)
 	k, _ := keyExists(db, "ABC")
 	if k != true {
-        t.Error()
-    }
+		t.Error()
+	}
 
 	nk, _ := keyExists(db, "999")
 	if nk != false {
-        t.Error()
-    }
+		t.Error()
+	}
 }
 
 // Dont like to test both but it makes sense to me
@@ -42,6 +43,7 @@ func TestInsertAndQuery(t *testing.T) {
 		Description: "TestTrans",
 		Category:    "Test",
 		Key:         "123",
+		Bank:        "Test",
 	}
 
 	v := []RowVal{r}
@@ -52,34 +54,33 @@ func TestInsertAndQuery(t *testing.T) {
 		t.Error("Expected id to be 1")
 	}
 
-    rows[0].GetDate() // TODO: this needs an assertion
+	rows[0].GetDate() // TODO: this needs an assertion
 
 }
-
 
 func TestSameKeyInsert(t *testing.T) {
 	db, _ := getDb("/tmp/test.db")
 	defer db.Close()
 	defer rmDB("/tmp/test.db")
 	r := RowVal{
-		Date:         time.Now().Unix(),
+		Date:        time.Now().Unix(),
 		Amount:      "100",
 		Description: "TestTrans",
 		Category:    "Test",
 		Key:         "123",
+		Bank:        "Test",
 	}
 
 	v := []RowVal{r}
-    i, _ := insertRows(db, v)
-    if i != 1 {
-        t.Error()
-    }
-    _, o := insertRows(db, v)
-    if o != 1 {
-        t.Error()
-    }
+	i, _ := insertRows(db, v)
+	if i != 1 {
+		t.Error()
+	}
+	_, o := insertRows(db, v)
+	if o != 1 {
+		t.Error()
+	}
 }
-
 
 func rmDB(path string) {
 	os.Remove(path)

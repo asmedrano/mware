@@ -2,21 +2,22 @@ package mware
 
 import (
 	"crypto/md5"
+	"database/sql"
 	"fmt"
 	"github.com/asmedrano/mWare/ofx"
 	"io"
 	"log"
 	"path"
-	"time"
-	"strings"
 	"strconv"
-	"database/sql"
+	"strings"
+	"time"
 )
 
 type Importer interface {
 	Import() // Extract and Transform Data here
 	Save()
 	Date() int64 // should return UNIX time
+	Bank() string
 }
 
 type SimpleImporter struct {
@@ -39,13 +40,14 @@ func (s *SimpleImporter) Import(path string, db *sql.DB) {
 		amount, _ := data.GetVal("Amount", data.Results[i])
 		description, _ := data.GetVal("Description", data.Results[i])
 		category, _ := data.GetVal("Category", data.Results[i])
-		recorded_at, _ := data.GetVal("Category", data.Results[i])
+		recorded_at, _ := data.GetVal("Recorded at", data.Results[i])
 		vals = append(vals, RowVal{
 			Date:        s.Date(date),
 			Amount:      amount,
 			Description: description,
 			Category:    category,
 			Key:         s.MakeKey(date + recorded_at + amount + description),
+			Bank:        s.Bank(),
 		})
 	}
 
@@ -54,7 +56,6 @@ func (s *SimpleImporter) Import(path string, db *sql.DB) {
 
 func (s *SimpleImporter) Save(db *sql.DB, data []RowVal) {
 	insertRows(db, data)
-
 }
 
 func (s *SimpleImporter) MakeKey(raw string) string {
@@ -64,14 +65,18 @@ func (s *SimpleImporter) MakeKey(raw string) string {
 }
 
 func (s *SimpleImporter) Date(raw string) int64 {
-    // raw looks like: 2014/08/04
-    dp := strings.Split(raw, "/")
-    year, _:= strconv.Atoi(dp[0]) // lets assume all these transactions happend in the year 2000+
-    month, _:= strconv.Atoi(dp[1]) // lets assume all these transactions happend in the year 2000+
-    day, _:= strconv.Atoi(dp[2]) // lets assume all these transactions happend in the year 2000+
-    t:= time.Date(year, getMonth(month), day, 0, 0, 0, 0, time.UTC)
+	// raw looks like: 2014/08/04
+	dp := strings.Split(raw, "/")
+	year, _ := strconv.Atoi(dp[0])  // lets assume all these transactions happend in the year 2000+
+	month, _ := strconv.Atoi(dp[1]) // lets assume all these transactions happend in the year 2000+
+	day, _ := strconv.Atoi(dp[2])   // lets assume all these transactions happend in the year 2000+
+	t := time.Date(year, getMonth(month), day, 0, 0, 0, 0, time.UTC)
 	return t.Unix()
 
+}
+
+func (s *SimpleImporter) Bank() string {
+	return "Simple Bank"
 }
 
 type CapOneImporter struct {
@@ -103,6 +108,7 @@ func (s *CapOneImporter) Import(ofxPath string, db *sql.DB) {
 			Description: description,
 			Category:    "", // TODO: need to parse description to get this
 			Key:         key,
+			Bank:        s.Bank(),
 		})
 	}
 
@@ -114,32 +120,46 @@ func (s *CapOneImporter) Save(db *sql.DB, data []RowVal) {
 }
 
 func (s *CapOneImporter) Date(raw string) int64 {
-    // raw looks like: 20140930170000.000
-    year, _:= strconv.Atoi(raw[:4]) // lets assume all these transactions happend in the year 2000+
-    month, _:= strconv.Atoi(raw[4:6]) // lets assume all these transactions happend in the year 2000+
-    day, _:= strconv.Atoi(raw[6:8]) // lets assume all these transactions happend in the year 2000+
-    t:= time.Date(year, getMonth(month), day, 0, 0, 0, 0, time.UTC)
+	// raw looks like: 20140930170000.000
+	year, _ := strconv.Atoi(raw[:4])   // lets assume all these transactions happend in the year 2000+
+	month, _ := strconv.Atoi(raw[4:6]) // lets assume all these transactions happend in the year 2000+
+	day, _ := strconv.Atoi(raw[6:8])   // lets assume all these transactions happend in the year 2000+
+	t := time.Date(year, getMonth(month), day, 0, 0, 0, 0, time.UTC)
 	return t.Unix()
 
 }
 
-
+func (s *CapOneImporter) Bank() string {
+	return "CapitalOne"
+}
 
 func getMonth(num int) time.Month {
-    var m time.Month
-    switch num{
-        case 1: m = time.January
-        case 2: m = time.February
-        case 3: m = time.March
-        case 4: m = time.April
-        case 5: m = time.May
-        case 6: m = time.June
-        case 7: m = time.July
-        case 8: m = time.August
-        case 9: m = time.September
-        case 10: m = time.October
-        case 11: m = time.November
-        case 12: m = time.December
-    }
-    return m
+	var m time.Month
+	switch num {
+	case 1:
+		m = time.January
+	case 2:
+		m = time.February
+	case 3:
+		m = time.March
+	case 4:
+		m = time.April
+	case 5:
+		m = time.May
+	case 6:
+		m = time.June
+	case 7:
+		m = time.July
+	case 8:
+		m = time.August
+	case 9:
+		m = time.September
+	case 10:
+		m = time.October
+	case 11:
+		m = time.November
+	case 12:
+		m = time.December
+	}
+	return m
 }
