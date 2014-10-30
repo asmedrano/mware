@@ -5,6 +5,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"time"
+	"strings"
 )
 
 type RowVal struct {
@@ -82,6 +83,7 @@ func insertRows(db *sql.DB, rv []RowVal) (in int, ign int) {
 }
 
 // Return all rows wrapped as []RowVal
+// TODO: This should return []RowVal, err
 func getRows(db *sql.DB) []RowVal {
 	results := []RowVal{}
 	rows, err := db.Query("select * from transactions")
@@ -96,6 +98,37 @@ func getRows(db *sql.DB) []RowVal {
 	}
 	return results
 }
+
+
+// Return rows as []RowVal
+func getRowsWhere(db *sql.DB, where []string, args[]interface{}) ([]RowVal, error) {
+	results := []RowVal{}
+    query := "select * from transactions"
+    if len(where) > 0 {
+        w := strings.Join(where, " AND ")
+        query += " WHERE " + w
+    }
+
+	stmt, err := db.Prepare(query)
+	if err != nil {
+		return results, err
+	}
+	defer stmt.Close()
+    rows, err := stmt.Query(args...)
+
+	if err != nil {
+		return results, err
+	}
+
+	for rows.Next() {
+		r := RowVal{}
+		rows.Scan(&r.Id, &r.Date, &r.Amount, &r.Description, &r.Category, &r.Key, &r.Bank)
+		results = append(results, r)
+	}
+	return results, nil
+}
+
+
 
 func keyExists(db *sql.DB, key string) (bool, error) {
 

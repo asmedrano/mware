@@ -54,8 +54,15 @@ func TestInsertAndQuery(t *testing.T) {
 		t.Error("Expected id to be 1")
 	}
 
-	rows[0].GetDate() // TODO: this needs an assertion
+	//rows[0].GetDate() // TODO: this needs an assertion
 
+	fRows, err := getRowsWhere(db, []string{"amount=?", "category=?"}, []interface{}{"100", "Test"})
+	if err != nil {
+		t.Error(err)
+	}
+	if fRows[0].Description != "TestTrans" {
+	    t.Error("Expected Description to be 'TestTrans'")
+    }
 }
 
 func TestSameKeyInsert(t *testing.T) {
