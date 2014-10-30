@@ -4,7 +4,6 @@ package mware
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -43,7 +42,10 @@ func GetResultsFilterDate(db *sql.DB, start string, end string) ([]RowVal, error
 		endDateTime = time.Date(edY, getMonth(edM), edD, 0, 0, 0, 0, time.UTC)
 	}
 
-	fmt.Println(startDateTime, endDateTime)
+    res, err := getRowsWhere(db, []string{"date > ?", "date < ?"}, []interface{}{startDateTime.Unix(), endDateTime.Unix()})
+    if err == nil {
+        return res, nil
+    }
 
-	return results, nil
+	return results, err
 }
