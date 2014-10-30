@@ -41,7 +41,6 @@ func TestTransactionFilter(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-    
     if len(res) != 1 {
         t.Error("res should be == 1")
     }

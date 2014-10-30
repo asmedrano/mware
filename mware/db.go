@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
-	"time"
 	"strings"
+	"time"
+	"fmt"
 )
 
 type RowVal struct {
@@ -20,7 +21,11 @@ type RowVal struct {
 
 // Return a time.Time from the RowVal.Date int64
 func (r *RowVal) GetDate() time.Time {
-     return time.Unix(r.Date, 0)
+	return time.Unix(r.Date, 0)
+}
+
+func (r RowVal) String() string {
+    return fmt.Sprintf("\n%v|%v|%v|%v|%v|%v", r.Id, r.GetDate(), r.Amount, r.Description, r.Category, r.Bank)
 }
 
 func GetDb(dbname string) (*sql.DB, error) {
@@ -44,7 +49,7 @@ func GetDb(dbname string) (*sql.DB, error) {
 // this is only here so i dont have to go back and change all the references to this
 // TODO: Change this
 func getDb(dbname string) (*sql.DB, error) {
-    return GetDb(dbname)
+	return GetDb(dbname)
 }
 
 // insert a list of rowvals into db in a single db transaction. The table happens to also be called transactions
@@ -86,7 +91,7 @@ func insertRows(db *sql.DB, rv []RowVal) (in int, ign int) {
 // TODO: This should return []RowVal, err
 func getRows(db *sql.DB) []RowVal {
 	results := []RowVal{}
-	rows, err := db.Query("select * from transactions")
+	rows, err := db.Query("select * from transactions order by date")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -99,22 +104,21 @@ func getRows(db *sql.DB) []RowVal {
 	return results
 }
 
-
 // Return rows as []RowVal
-func getRowsWhere(db *sql.DB, where []string, args[]interface{}) ([]RowVal, error) {
+func getRowsWhere(db *sql.DB, where []string, args []interface{}) ([]RowVal, error) {
 	results := []RowVal{}
-    query := "select * from transactions"
-    if len(where) > 0 {
-        w := strings.Join(where, " AND ")
-        query += " WHERE " + w
-    }
-
+	query := "select * from transactions"
+	if len(where) > 0 {
+		w := strings.Join(where, " AND ")
+		query += " WHERE " + w
+	}
+    query += " Order By date"
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		return results, err
 	}
 	defer stmt.Close()
-    rows, err := stmt.Query(args...)
+	rows, err := stmt.Query(args...)
 
 	if err != nil {
 		return results, err
@@ -127,8 +131,6 @@ func getRowsWhere(db *sql.DB, where []string, args[]interface{}) ([]RowVal, erro
 	}
 	return results, nil
 }
-
-
 
 func keyExists(db *sql.DB, key string) (bool, error) {
 
