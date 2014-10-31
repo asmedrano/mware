@@ -37,7 +37,7 @@ func TestTransactionFilter(t *testing.T) {
 	v := []RowVal{a, b, c}
 	insertRows(db, v)
 
-	res, err := GetResultsFilterDate(db, "07-02-2014", "07-10-2014")
+	res, err := GetResultsFilterDate(db, "07-02-2014", "07-10-2014", []string{}, []interface{}{})
 	if err != nil {
 		t.Error(err)
 	}

@@ -41,12 +41,14 @@ func main() {
 		log.Print("Done!")
 	} else if *task == "show" {
         log.Printf("Listing Transactions -- Staring from: %v", *startDate)
+        var filters = []string {}
+        var filterArgs = []interface{}{}
 		db, err := mware.GetDb(*dbPath)
 		if err != nil {
 			log.Fatal("Could not open db")
 		}
 		defer db.Close()
-        results, err := mware.GetResultsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "))
+        results, err := mware.GetResultsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
         if err == nil {
             for i := range(results) { 
                 fmt.Print(results[i])

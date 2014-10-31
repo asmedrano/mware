@@ -23,10 +23,10 @@ import (
 // start and end date are formatted like this mm-dd-yyyy.
 // start date cannot be ""
 // end date can also be "". Which just treats it as no upper limit
-func GetResultsFilterDate(db *sql.DB, start string, end string) ([]RowVal, error) {
+func GetResultsFilterDate(db *sql.DB, start string, end string, filters []string, filterArgs []interface{}) ([]RowVal, error) {
 	results := []RowVal{}
-	var filter = []string{}
-	var args = []interface{}{}
+    filter := filters
+    args := filterArgs
 	if start == "" {
 		return results, errors.New("Start Date is required")
 	}
