@@ -9,6 +9,7 @@ import (
 	"fmt"
 )
 
+
 type RowVal struct {
 	Id          string
 	Date        int64
@@ -18,6 +19,7 @@ type RowVal struct {
 	Key         string // a compound Key that should uniquely identify this entry
 	Bank        string // the Source bank
 }
+
 
 // Return a time.Time from the RowVal.Date int64
 func (r *RowVal) GetDate() time.Time {
