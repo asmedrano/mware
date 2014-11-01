@@ -48,7 +48,7 @@ func TestTransactionFilters(t *testing.T) {
 		t.Error("res should be == 1")
 	}
 
-	res, err = GetCreditsFilterDate(db, "07-02-2014", "07-10-2014")
+	res, err = GetCreditsFilterDate(db, "07-02-2014", "07-10-2014", []string{}, []interface{}{})
 	if err != nil {
 		t.Error(err)
 	}
