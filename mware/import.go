@@ -18,6 +18,7 @@ type Importer interface {
 	Save()
 	Date() int64 // should return UNIX time
 	Bank() string
+	AccType() string
 }
 
 type SimpleImporter struct {
@@ -48,6 +49,7 @@ func (s *SimpleImporter) Import(path string, db *sql.DB) {
 			Category:    category,
 			Key:         s.MakeKey(date + recorded_at + amount + description),
 			Bank:        s.Bank(),
+			AccType:     s.AccType(),
 		})
 	}
 
@@ -77,6 +79,10 @@ func (s *SimpleImporter) Date(raw string) int64 {
 
 func (s *SimpleImporter) Bank() string {
 	return "Simple Bank"
+}
+
+func (s *SimpleImporter) AccType() string {
+	return "checking"
 }
 
 type CapOneImporter struct {
@@ -109,6 +115,7 @@ func (s *CapOneImporter) Import(ofxPath string, db *sql.DB) {
 			Category:    "", // TODO: need to parse description to get this
 			Key:         key,
 			Bank:        s.Bank(),
+			AccType:     s.AccType(),
 		})
 	}
 
@@ -131,6 +138,10 @@ func (s *CapOneImporter) Date(raw string) int64 {
 
 func (s *CapOneImporter) Bank() string {
 	return "CapitalOne"
+}
+
+func (s *CapOneImporter) AccType() string {
+	return "creditcard"
 }
 
 func getMonth(num int) time.Month {

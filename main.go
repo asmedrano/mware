@@ -2,21 +2,25 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/asmedrano/mware/mware"
 	"log"
 	"strings"
-	"fmt"
 )
 
 func main() {
-	task := flag.String("t", "import", "What task to run. Options are <import>")
+
+	task := flag.String("t", "import", "What task to run. Options are <import|show>") // task can be used in conjuntion with task modifiers
+	tm_TransTypeFilter := flag.String("tt", "", "Transaction type filter, credit|debit")
 	// TODO it would be nice to get per task from always being declared
 	importType := flag.String("b", "simple", "Document Source Bank i.e Simple | CapOne")
 	docPath := flag.String("p", "example.csv", "Path to document")
 	dbPath := flag.String("d", "transactions.db", "Path to db file")
-    startDate := flag.String("start", "", "Start Date, used when displaying transactions")
-    endDate := flag.String("end", "", "End Date, used when displaying transactions")
+	startDate := flag.String("start", "", "Start Date, when using <show> task")
+	endDate := flag.String("end", "", "End Date, when using <show>task")
+
 	flag.Parse()
+
 	// TODO: validate task input
 	if *task == "import" {
 		db, err := mware.GetDb(*dbPath)
@@ -39,23 +43,34 @@ func main() {
 		}
 
 		log.Print("Done!")
+
 	} else if *task == "show" {
-        log.Printf("Listing Transactions -- Staring from: %v", *startDate)
-        var filters = []string {}
-        var filterArgs = []interface{}{}
+		var results []mware.RowVal
+		log.Printf("Listing Transactions -- Staring from: %v", *startDate)
+		var filters = []string{}
+		var filterArgs = []interface{}{}
 		db, err := mware.GetDb(*dbPath)
 		if err != nil {
 			log.Fatal("Could not open db")
 		}
 		defer db.Close()
-        results, err := mware.GetResultsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
-        if err == nil {
-            for i := range(results) { 
-                fmt.Print(results[i])
-            }
-        }else{
-            log.Println(err)
-        }
+		// TODO: Refactor this
+		switch *tm_TransTypeFilter {
+		case "credits":
+			results, err = mware.GetCreditsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "))
+		case "debits":
+			results, err = mware.GetDebitsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "))
+		default:
+			results, err = mware.GetResultsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
+
+		}
+		if err == nil {
+			for i := range results {
+				fmt.Print(results[i])
+			}
+		} else {
+			log.Println(err)
+		}
 
 	}
 

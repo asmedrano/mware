@@ -4,29 +4,32 @@ package mware
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
-	"fmt"
 )
 
 // TODO: Aggregate functions
 /*
-   - Total Income
-   - Total Expenses, (filters)
+   - Total Income, as filter
+   - Total Expenses, as filters
    - Unique Vendors
    - Expense By Vendor
    - Biggest Expense
+   - Filter all results
 */
 
-// Filter transactions by a start and end date
+// Filter transactions by a start and end date with optional modifiers
 // start and end date are formatted like this mm-dd-yyyy.
 // start date cannot be ""
 // end date can also be "". Which just treats it as no upper limit
+// filters is a slice of field<op>? ex: date > 100099939
+// filterArgs is a slice of interfaces that gets passed the the query
 func GetResultsFilterDate(db *sql.DB, start string, end string, filters []string, filterArgs []interface{}) ([]RowVal, error) {
 	results := []RowVal{}
-    filter := filters
-    args := filterArgs
+	filter := filters
+	args := filterArgs
 	if start == "" {
 		return results, errors.New("Start Date is required")
 	}
@@ -40,9 +43,9 @@ func GetResultsFilterDate(db *sql.DB, start string, end string, filters []string
 
 	if end != "" {
 		endDateTime, err := ParseDateString(end)
-        if err != nil {
-            return results, err
-        }
+		if err != nil {
+			return results, err
+		}
 		filter = append(filter, "date < ?")
 		args = append(args, endDateTime.Unix())
 	}
@@ -54,6 +57,26 @@ func GetResultsFilterDate(db *sql.DB, start string, end string, filters []string
 
 	return results, err
 }
+
+// Get All credits from start date to end date
+func GetCreditsFilterDate(db *sql.DB, start string, end string) ([]RowVal, error) {
+	filters := []string{
+		"CAST(amount as float) > ?",
+		"account_type != ?",
+	}
+	filterArgs := []interface{}{0, "creditcard"}
+	return GetResultsFilterDate(db, start, end, filters, filterArgs)
+}
+
+// Get All debits  from start date to end date
+func GetDebitsFilterDate(db *sql.DB, start string, end string) ([]RowVal, error) {
+	filters := []string{
+		"CAST(amount as float) < ?",
+	}
+	filterArgs := []interface{}{0}
+	return GetResultsFilterDate(db, start, end, filters, filterArgs)
+}
+
 
 // Parse a date that looks like this  mm-dd-yyyy
 func ParseDateString(date string) (time.Time, error) {

@@ -17,6 +17,7 @@ func TestKeyExists(t *testing.T) {
 		Category:    "Test",
 		Key:         "ABC",
 		Bank:        "test",
+		AccType:     "creditcard",
 	}
 
 	v := []RowVal{r}
@@ -44,13 +45,14 @@ func TestInsertAndQuery(t *testing.T) {
 		Category:    "Test",
 		Key:         "123",
 		Bank:        "Test",
+		AccType:     "checking",
 	}
 
 	v := []RowVal{r}
 	insertRows(db, v)
 	rows := getRows(db)
 
-	if rows[0].Id != "1" {
+	if rows[0].Id != 1 {
 		t.Error("Expected id to be 1")
 	}
 
@@ -61,8 +63,8 @@ func TestInsertAndQuery(t *testing.T) {
 		t.Error(err)
 	}
 	if fRows[0].Description != "TestTrans" {
-	    t.Error("Expected Description to be 'TestTrans'")
-    }
+		t.Error("Expected Description to be 'TestTrans'")
+	}
 }
 
 func TestSameKeyInsert(t *testing.T) {
@@ -76,6 +78,7 @@ func TestSameKeyInsert(t *testing.T) {
 		Category:    "Test",
 		Key:         "123",
 		Bank:        "Test",
+		AccType:     "creditcard",
 	}
 
 	v := []RowVal{r}
