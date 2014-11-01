@@ -65,9 +65,15 @@ func main() {
 
 		}
 		if err == nil {
+		    // Run some aggregation methods
 			for i := range results {
 				fmt.Print(results[i])
 			}
+            total := mware.Total(results)
+            fmt.Print("\n--------------------------------------\n")
+            fmt.Printf("Total: %.2f", total)
+            max := mware.Max(results)
+            fmt.Printf("\nLargest Transaction:%v", max)
 		} else {
 			log.Println(err)
 		}

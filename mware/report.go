@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -62,9 +63,8 @@ func GetResultsFilterDate(db *sql.DB, start string, end string, filters []string
 func GetCreditsFilterDate(db *sql.DB, start string, end string) ([]RowVal, error) {
 	filters := []string{
 		"CAST(amount as float) > ?",
-		"account_type != ?",
 	}
-	filterArgs := []interface{}{0, "creditcard"}
+	filterArgs := []interface{}{0}
 	return GetResultsFilterDate(db, start, end, filters, filterArgs)
 }
 
@@ -77,6 +77,42 @@ func GetDebitsFilterDate(db *sql.DB, start string, end string) ([]RowVal, error)
 	return GetResultsFilterDate(db, start, end, filters, filterArgs)
 }
 
+// Get the Total Amount of a slice of RowVal
+func Total(r []RowVal) float64 {
+	total := 0.00
+	var v float64
+	var err error
+	for i := range r {
+		v, err = strconv.ParseFloat(r[i].Amount, 64)
+		if err == nil {
+			total += v
+		}
+	}
+	return total
+}
+
+// Get the Biggest transaction
+func Max(r []RowVal) RowVal {
+	m := 0
+	lastMax := 0.00
+	var v float64
+	var err error
+	var abs float64
+
+	for i := range r {
+		v, err = strconv.ParseFloat(r[i].Amount, 64)
+		if err == nil {
+			abs = math.Abs(v)
+			if abs > lastMax {
+				m = i
+				lastMax = abs
+			}
+		}
+
+	}
+
+	return r[m]
+}
 
 // Parse a date that looks like this  mm-dd-yyyy
 func ParseDateString(date string) (time.Time, error) {
