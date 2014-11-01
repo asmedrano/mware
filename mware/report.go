@@ -60,21 +60,21 @@ func GetResultsFilterDate(db *sql.DB, start string, end string, filters []string
 }
 
 // Get All credits from start date to end date
-func GetCreditsFilterDate(db *sql.DB, start string, end string) ([]RowVal, error) {
-	filters := []string{
-		"CAST(amount as float) > ?",
-	}
-	filterArgs := []interface{}{0}
-	return GetResultsFilterDate(db, start, end, filters, filterArgs)
+func GetCreditsFilterDate(db *sql.DB, start string, end string, filters []string, filterArgs []interface{}) ([]RowVal, error) {
+	f := filters
+	f = append(f, "CAST(amount as float) > ?")
+	fA := filterArgs
+	fA = append(fA, 0)
+	return GetResultsFilterDate(db, start, end, f, fA)
 }
 
 // Get All debits  from start date to end date
-func GetDebitsFilterDate(db *sql.DB, start string, end string) ([]RowVal, error) {
-	filters := []string{
-		"CAST(amount as float) < ?",
-	}
-	filterArgs := []interface{}{0}
-	return GetResultsFilterDate(db, start, end, filters, filterArgs)
+func GetDebitsFilterDate(db *sql.DB, start string, end string, filters []string, filterArgs []interface{}) ([]RowVal, error) {
+	f := filters
+	f = append(f, "CAST(amount as float) < ?")
+	fA := filterArgs
+	fA = append(fA, 0)
+	return GetResultsFilterDate(db, start, end, f, fA)
 }
 
 // Get the Total Amount of a slice of RowVal

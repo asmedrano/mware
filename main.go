@@ -13,7 +13,7 @@ func main() {
 	task := flag.String("t", "import", "What task to run. Options are <import|show>") // task can be used in conjuntion with task modifiers
 	tm_TransTypeFilter := flag.String("tt", "", "Transaction type filter, credit|debit")
 	// TODO it would be nice to get per task from always being declared
-	importType := flag.String("b", "simple", "Document Source Bank i.e Simple | CapOne")
+	bank := flag.String("b", "simple", "Document Source Bank i.e Simple | CapOne")
 	docPath := flag.String("p", "example.csv", "Path to document")
 	dbPath := flag.String("d", "transactions.db", "Path to db file")
 	startDate := flag.String("start", "", "Start Date, when using <show> task")
@@ -29,7 +29,7 @@ func main() {
 		}
 		defer db.Close()
 
-		iT := strings.ToLower(*importType)
+		iT := strings.ToLower(*bank)
 
 		if iT == "simple" {
 			log.Println("Importing Simple Bank CSV...")
@@ -54,26 +54,40 @@ func main() {
 			log.Fatal("Could not open db")
 		}
 		defer db.Close()
-		// TODO: Refactor this
+
+		switch strings.Trim(*bank, " ") {
+		case "Simple":
+			filters = append(filters, "bank=?")
+			filterArgs = append(filterArgs, "Simple Bank")
+		case "CapOne":
+			filters = append(filters, "bank=?")
+			filterArgs = append(filterArgs, "CapitalOne")
+		}
+
 		switch *tm_TransTypeFilter {
 		case "credits":
-			results, err = mware.GetCreditsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "))
+			results, err = mware.GetCreditsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
 		case "debits":
-			results, err = mware.GetDebitsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "))
+			results, err = mware.GetDebitsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
 		default:
 			results, err = mware.GetResultsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
 
 		}
 		if err == nil {
-		    // Run some aggregation methods
+			// Run some aggregation methods
 			for i := range results {
 				fmt.Print(results[i])
 			}
-            total := mware.Total(results)
-            fmt.Print("\n--------------------------------------\n")
-            fmt.Printf("Total: %.2f", total)
-            max := mware.Max(results)
-            fmt.Printf("\nLargest Transaction:%v", max)
+
+			if *tm_TransTypeFilter != "" {
+				total := mware.Total(results)
+				fmt.Print("\n--------------------------------------\n")
+				fmt.Printf("Total: %.2f", total)
+
+				max := mware.Max(results)
+				fmt.Printf("\nLargest Transaction:%v\n", max)
+			}
+
 		} else {
 			log.Println(err)
 		}
