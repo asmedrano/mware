@@ -65,6 +65,15 @@ func TestInsertAndQuery(t *testing.T) {
 	if fRows[0].Description != "TestTrans" {
 		t.Error("Expected Description to be 'TestTrans'")
 	}
+
+    distinct, err := getDistinctDescriptions(db)
+    if err != nil {
+        t.Error(err)
+    }
+
+    if distinct[0] != "TestTrans" {
+        t.Error()
+    }
 }
 
 func TestSameKeyInsert(t *testing.T) {

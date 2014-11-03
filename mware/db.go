@@ -153,3 +153,20 @@ func keyExists(db *sql.DB, key string) (bool, error) {
 		return false, nil
 	}
 }
+
+// Return distinct descriptions
+func getDistinctDescriptions(db *sql.DB) ([]string, error) {
+    results := []string{}
+    rows, err := db.Query("select distinct(description) from transactions")
+	if err != nil {
+		return results, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+        var d string
+		rows.Scan(&d)
+		results = append(results, d)
+	}
+	return results, err
+
+}
