@@ -77,6 +77,66 @@ func GetDebitsFilterDate(db *sql.DB, start string, end string, filters []string,
 	return GetResultsFilterDate(db, start, end, f, fA)
 }
 
+// Get debits filtered by description
+func GetVendorDebits(db *sql.DB, start string, end string, vendor string, filters []string, filterArgs []interface{}) ([]RowVal, error) {
+	f := filters
+	f = append(f, "description=?")
+	fA := filterArgs
+	fA = append(fA, vendor)
+
+	return GetDebitsFilterDate(db, start, end, f, fA)
+}
+
+// Get credits filtered by description
+func GetVendorCredits(db *sql.DB, start string, end string, vendor string, filters []string, filterArgs []interface{}) ([]RowVal, error) {
+	f := filters
+	f = append(f, "description=?")
+	fA := filterArgs
+	fA = append(fA, vendor)
+
+	return GetCreditsFilterDate(db, start, end, f, fA)
+}
+
+// Get unique descriptions and return all transactions that match
+func GroupVendorDebits(db *sql.DB, start string, end string, filters []string, filterArgs []interface{}) (map[string][]RowVal, error) {
+	var err error
+	var results map[string][]RowVal = map[string][]RowVal{}
+	var rv []RowVal
+	des, err := getDistinctDescriptions(db)
+	if err == nil {
+		for i := range des {
+			rv, err = GetVendorDebits(db, start, end, des[i], filters, filterArgs)
+			if err == nil {
+				if len(rv) > 0 {
+					results[des[i]] = rv
+				}
+			}
+		}
+	}
+
+	return results, err
+}
+
+// Get unique descriptions and return all transactions that match
+func GroupVendorCredits(db *sql.DB, start string, end string, filters []string, filterArgs []interface{}) (map[string][]RowVal, error) {
+	var err error
+	var results map[string][]RowVal = map[string][]RowVal{}
+	var rv []RowVal
+	des, err := getDistinctDescriptions(db)
+	if err == nil {
+		for i := range des {
+			rv, err = GetVendorCredits(db, start, end, des[i], filters, filterArgs)
+			if err == nil {
+				if len(rv) > 0 {
+					results[des[i]] = rv
+				}
+			}
+		}
+	}
+
+	return results, err
+}
+
 // Get the Total Amount of a slice of RowVal
 func Total(r []RowVal) float64 {
 	total := 0.00

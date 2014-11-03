@@ -52,10 +52,29 @@ func TestTransactionFilters(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	if res[0].Id != 2 {
 		t.Error("res.Id should be == 2")
 	}
 
+	res, err = GetVendorDebits(db, "06-30-2014", "07-10-2014", "TestTrans", []string{}, []interface{}{})
+	if err != nil || len(res) == 0 {
+		t.Error(err)
+	}
+
+	res, err = GetVendorCredits(db, "06-30-2014", "07-10-2014", "Income", []string{}, []interface{}{})
+	if err != nil || len(res) == 0 {
+		t.Error(err)
+	}
+
+	groupRes, err := GroupVendorDebits(db, "06-30-2014", "07-10-2014", []string{}, []interface{}{})
+	if err == nil {
+		t.Log(groupRes)
+	}
+
+	groupRes, err = GroupVendorCredits(db, "06-30-2014", "07-12-2014", []string{}, []interface{}{})
+	if err == nil {
+		t.Log(groupRes)
+	}
 
 }

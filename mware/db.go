@@ -170,3 +170,4 @@ func getDistinctDescriptions(db *sql.DB) ([]string, error) {
 	return results, err
 
 }
+

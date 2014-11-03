@@ -18,6 +18,7 @@ func main() {
 	dbPath := flag.String("d", "transactions.db", "Path to db file")
 	startDate := flag.String("start", "", "Start Date, when using <show> task")
 	endDate := flag.String("end", "", "End Date, when using <show>task")
+	groupTransactions := flag.Bool("gt", false, "Group Transactions by Descriptions")
 
 	flag.Parse()
 
@@ -49,6 +50,7 @@ func main() {
 		log.Printf("Listing Transactions -- Staring from: %v", *startDate)
 		var filters = []string{}
 		var filterArgs = []interface{}{}
+		var groupRes = map[string][]mware.RowVal{}
 		db, err := mware.GetDb(*dbPath)
 		if err != nil {
 			log.Fatal("Could not open db")
@@ -67,8 +69,14 @@ func main() {
 		switch *tm_TransTypeFilter {
 		case "credits":
 			results, err = mware.GetCreditsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
+			if *groupTransactions == true {
+				groupRes, err = mware.GroupVendorCredits(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
+			}
 		case "debits":
 			results, err = mware.GetDebitsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
+			if *groupTransactions == true {
+				groupRes, err = mware.GroupVendorDebits(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
+			}
 		default:
 			results, err = mware.GetResultsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
 
@@ -86,6 +94,15 @@ func main() {
 
 				max := mware.Max(results)
 				fmt.Printf("\nLargest Transaction:%v\n", max)
+			}
+
+			if *groupTransactions == true {
+                //TODO: Sort this list
+			    fmt.Print("\n-----------TRANSACTION TOTAL BY DESCRIPTION -------------------\n")
+                for i := range groupRes {
+                    total := mware.Total(groupRes[i])
+                    fmt.Printf("%v: #%v, Total: %.2f\n", i, len(groupRes[i]), total)
+                }
 			}
 
 		} else {
