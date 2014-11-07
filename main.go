@@ -18,7 +18,8 @@ func main() {
 	dbPath := flag.String("d", "transactions.db", "Path to db file")
 	startDate := flag.String("start", "", "Start Date, when using <show> task")
 	endDate := flag.String("end", "", "End Date, when using <show>task")
-	groupTransactions := flag.Bool("gt", false, "Group Transactions by Descriptions")
+	groupTransactions := flag.Bool("gt", false, "Group All Transactions by Descriptions")
+	fDescription := flag.String("desc", "", "Filter by description")
 
 	flag.Parse()
 
@@ -57,6 +58,7 @@ func main() {
 		}
 		defer db.Close()
 
+		// Bank Filtering
 		switch strings.Trim(*bank, " ") {
 		case "Simple":
 			filters = append(filters, "bank=?")
@@ -66,6 +68,13 @@ func main() {
 			filterArgs = append(filterArgs, "CapitalOne")
 		}
 
+		// Description filtering
+		if strings.Trim(*fDescription, "") != "" {
+			filters = append(filters, "description like ?")
+			filterArgs = append(filterArgs, "%"+strings.Trim(*fDescription, "")+"%")
+		}
+
+		// Transaction type filtering
 		switch *tm_TransTypeFilter {
 		case "credits":
 			results, err = mware.GetCreditsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
@@ -81,6 +90,7 @@ func main() {
 			results, err = mware.GetResultsFilterDate(db, strings.Trim(*startDate, " "), strings.Trim(*endDate, " "), filters, filterArgs)
 
 		}
+
 		if err == nil {
 			// Run some aggregation methods
 			for i := range results {
@@ -91,19 +101,22 @@ func main() {
 				total := mware.Total(results)
 				fmt.Print("\n--------------------------------------\n")
 				fmt.Printf("Total: %.2f", total)
-
-				max := mware.Max(results)
-				fmt.Printf("\nLargest Transaction:%v\n", max)
+				if len(results) != 0 {
+					max := mware.Max(results)
+					fmt.Printf("\nLargest Transaction:%v\n", max)
+				}
 			}
 
 			if *groupTransactions == true {
-                //TODO: Sort this list
-			    fmt.Print("\n-----------TRANSACTION TOTAL BY DESCRIPTION -------------------\n")
-                for i := range groupRes {
-                    total := mware.Total(groupRes[i])
-                    fmt.Printf("%v: #%v, Total: %.2f\n", i, len(groupRes[i]), total)
-                }
+				//TODO: Sort this list
+				fmt.Print("\n-----------TRANSACTION TOTAL BY DESCRIPTION -------------------\n")
+				for i := range groupRes {
+					total := mware.Total(groupRes[i])
+					fmt.Printf("%v: #%v, Total: %.2f\n", i, len(groupRes[i]), total)
+				}
 			}
+
+			fmt.Print("\n")
 
 		} else {
 			log.Println(err)
