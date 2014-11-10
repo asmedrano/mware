@@ -18,7 +18,7 @@ func main() {
 	dbPath := flag.String("d", "transactions.db", "Path to db file")
 	startDate := flag.String("start", "", "Start Date, when using <show> task")
 	endDate := flag.String("end", "", "End Date, when using <show>task")
-	groupTransactions := flag.Bool("gt", false, "Group All Transactions by Descriptions")
+	groupTransactions := flag.Bool("gt", false, "Group ALL transactions returned by thier descriptions.")
 	fDescription := flag.String("desc", "", "Filter by description")
 
 	flag.Parse()
