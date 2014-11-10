@@ -26,7 +26,9 @@ func (r *RowVal) GetDate() time.Time {
 }
 
 func (r RowVal) String() string {
-	return fmt.Sprintf("\n%v|%v|%v|%v|%v|%v", r.Id, r.GetDate(), r.Amount, r.Description, r.Category, r.Bank)
+    // TODO: Strip out the stuff we dont want from the Date
+	tm := fmt.Sprintf("%v", r.GetDate())
+	return fmt.Sprintf("\n%v|%v|%v|%v|%v|%v", r.Id, tm, r.Amount, r.Description, r.Category, r.Bank)
 }
 
 func GetDb(dbname string) (*sql.DB, error) {
@@ -156,18 +158,17 @@ func keyExists(db *sql.DB, key string) (bool, error) {
 
 // Return distinct descriptions
 func getDistinctDescriptions(db *sql.DB) ([]string, error) {
-    results := []string{}
-    rows, err := db.Query("select distinct(description) from transactions")
+	results := []string{}
+	rows, err := db.Query("select distinct(description) from transactions")
 	if err != nil {
 		return results, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-        var d string
+		var d string
 		rows.Scan(&d)
 		results = append(results, d)
 	}
 	return results, err
 
 }
-

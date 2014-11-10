@@ -10,10 +10,10 @@ import (
 
 func main() {
 
-	task := flag.String("t", "import", "What task to run. Options are <import|show>") // task can be used in conjuntion with task modifiers
+	task := flag.String("t", "show", "What task to run. Options are <import|show>") // task can be used in conjuntion with task modifiers
 	tm_TransTypeFilter := flag.String("tt", "", "Transaction type filter, credit|debit")
 	// TODO it would be nice to get per task from always being declared
-	bank := flag.String("b", "simple", "Document Source Bank i.e Simple | CapOne")
+	bank := flag.String("b", "", "Document Source Bank i.e simple | capone")
 	docPath := flag.String("p", "example.csv", "Path to document")
 	dbPath := flag.String("d", "transactions.db", "Path to db file")
 	startDate := flag.String("start", "", "Start Date, when using <show> task")
@@ -30,25 +30,26 @@ func main() {
 			log.Fatal("Could not open db")
 		}
 		defer db.Close()
+		if *bank != "" {
+			iT := strings.ToLower(*bank)
 
-		iT := strings.ToLower(*bank)
+			if iT == "simple" {
+				log.Println("Importing Simple Bank CSV...")
+				i := mware.SimpleImporter{}
+				i.Import(*docPath, db)
+			} else if iT == "capone" {
+				log.Println("Importing CapOne OFX...")
 
-		if iT == "simple" {
-			log.Println("Importing Simple Bank CSV...")
-			i := mware.SimpleImporter{}
-			i.Import(*docPath, db)
-		} else if iT == "capone" {
-			log.Println("Importing CapOne OFX...")
-
-			i := mware.CapOneImporter{}
-			i.Import(*docPath, db)
+				i := mware.CapOneImporter{}
+				i.Import(*docPath, db)
+			}
+			log.Print("Done!")
+		} else {
+			fmt.Print("\nPlease select a bank using `-b` flag\n")
 		}
-
-		log.Print("Done!")
 
 	} else if *task == "show" {
 		var results []mware.RowVal
-		log.Printf("Listing Transactions -- Staring from: %v", *startDate)
 		var filters = []string{}
 		var filterArgs = []interface{}{}
 		var groupRes = map[string][]mware.RowVal{}
@@ -59,15 +60,16 @@ func main() {
 		defer db.Close()
 
 		// Bank Filtering
-		switch strings.Trim(*bank, " ") {
-		case "Simple":
-			filters = append(filters, "bank=?")
-			filterArgs = append(filterArgs, "Simple Bank")
-		case "CapOne":
-			filters = append(filters, "bank=?")
-			filterArgs = append(filterArgs, "CapitalOne")
+		if *bank != "" {
+			switch strings.ToLower(strings.Trim(*bank, " ")) {
+			case "simple":
+				filters = append(filters, "bank=?")
+				filterArgs = append(filterArgs, "Simple Bank")
+			case "capone":
+				filters = append(filters, "bank=?")
+				filterArgs = append(filterArgs, "CapitalOne")
+			}
 		}
-
 		// Description filtering
 		if strings.Trim(*fDescription, "") != "" {
 			filters = append(filters, "description like ?")
@@ -104,6 +106,8 @@ func main() {
 				if len(results) != 0 {
 					max := mware.Max(results)
 					fmt.Printf("\nLargest Transaction:%v\n", max)
+					avg := total / float64(len(results))
+					fmt.Printf("\nAverage Transaction Amount:%.2f\n", avg)
 				}
 			}
 
