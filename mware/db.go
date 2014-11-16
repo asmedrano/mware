@@ -128,7 +128,7 @@ func getRowsWhere(db *sql.DB, where []string, args []interface{}) ([]RowVal, err
 			}
 		}
 
-		query += " WHERE" + w
+		query += " WHERE " + w
 	}
 	query += " Order By date"
 
