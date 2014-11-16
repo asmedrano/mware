@@ -131,7 +131,6 @@ func getRowsWhere(db *sql.DB, where []string, args []interface{}) ([]RowVal, err
 		query += " WHERE " + w
 	}
 	query += " Order By date"
-	log.Print(query, "<--------")
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		return results, err
