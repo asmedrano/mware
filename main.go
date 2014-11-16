@@ -59,17 +59,6 @@ func main() {
 		}
 		defer db.Close()
 
-		// Bank Filtering
-		if *bank != "" {
-			switch strings.ToLower(strings.Trim(*bank, " ")) {
-			case "simple":
-				filters = append(filters, "bank=?")
-				filterArgs = append(filterArgs, "Simple Bank")
-			case "capone":
-				filters = append(filters, "bank=?")
-				filterArgs = append(filterArgs, "CapitalOne")
-			}
-		}
 		// Description filtering. This can be a single item or a | delimited list
 		// We need to make sure to group these into a single clause using (clause OR clause). #TODO: This is HACKY
 		if strings.Trim(*fDescription, " ") != " " {
@@ -88,11 +77,22 @@ func main() {
 				    filterArgs = append(filterArgs, "%"+strings.Trim(dFilters[i], " ")+"%")
 				}
 			} else {
-				filters = append(filters, clause)
+				filters = append(filters, "AND description like ?")
 				filterArgs = append(filterArgs, "%"+strings.Trim(dFilters[0], " ")+"%")
 
 			}
 
+		}
+	    // Bank Filtering
+		if *bank != "" {
+			switch strings.ToLower(strings.Trim(*bank, " ")) {
+			case "simple":
+				filters = append(filters, "bank=?")
+				filterArgs = append(filterArgs, "Simple Bank")
+			case "capone":
+				filters = append(filters, "bank=?")
+				filterArgs = append(filterArgs, "CapitalOne")
+			}
 		}
 
 		// Transaction type filtering

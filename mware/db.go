@@ -112,7 +112,7 @@ func getRowsWhere(db *sql.DB, where []string, args []interface{}) ([]RowVal, err
 	results := []RowVal{}
 	query := "select * from transactions"
 	or := regexp.MustCompile("\\bor\\b|\\bOR\\b")
-    cleanQueryOps := regexp.MustCompile("OR|or|AND|and") // we are gonna strip these out in a sec
+    cleanQueryOps := regexp.MustCompile("\\bOR\\b|\\bor\\b|\\bAND\\b|\\band\\b") // we are gonna strip these out in a sec
 	if len(where) > 0 {
 		w := ""
 		for i := range where {
@@ -131,7 +131,7 @@ func getRowsWhere(db *sql.DB, where []string, args []interface{}) ([]RowVal, err
 		query += " WHERE " + w
 	}
 	query += " Order By date"
-
+	log.Print(query, "<--------")
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		return results, err
