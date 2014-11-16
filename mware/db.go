@@ -5,7 +5,7 @@ import (
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
-	"strings"
+	"regexp"
 	"time"
 )
 
@@ -26,7 +26,7 @@ func (r *RowVal) GetDate() time.Time {
 }
 
 func (r RowVal) String() string {
-    // TODO: Strip out the stuff we dont want from the Date
+	// TODO: Strip out the stuff we dont want from the Date
 	tm := fmt.Sprintf("%v", r.GetDate())
 	return fmt.Sprintf("\n%v|%v|%v|%v|%v|%v", r.Id, tm, r.Amount, r.Description, r.Category, r.Bank)
 }
@@ -111,11 +111,27 @@ func getRows(db *sql.DB) []RowVal {
 func getRowsWhere(db *sql.DB, where []string, args []interface{}) ([]RowVal, error) {
 	results := []RowVal{}
 	query := "select * from transactions"
+	or := regexp.MustCompile("\\bor\\b|\\bOR\\b")
+    cleanQueryOps := regexp.MustCompile("OR|or|AND|and") // we are gonna strip these out in a sec
 	if len(where) > 0 {
-		w := strings.Join(where, " AND ")
-		query += " WHERE " + w
+		w := ""
+		for i := range where {
+			if i > 0 {
+				if or.FindString(where[i]) != "" {
+					// Implicit AND, Ors when required
+					w += fmt.Sprintf(" %v %v", "OR", cleanQueryOps.ReplaceAllString(where[i], ""))
+				} else {
+					w += fmt.Sprintf(" %v %v", "AND", cleanQueryOps.ReplaceAllString(where[i], ""))
+				}
+			} else {
+				w += cleanQueryOps.ReplaceAllString(where[i], "")
+			}
+		}
+
+		query += " WHERE" + w
 	}
 	query += " Order By date"
+
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		return results, err

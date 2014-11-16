@@ -70,10 +70,29 @@ func main() {
 				filterArgs = append(filterArgs, "CapitalOne")
 			}
 		}
-		// Description filtering
-		if strings.Trim(*fDescription, "") != "" {
-			filters = append(filters, "description like ?")
-			filterArgs = append(filterArgs, "%"+strings.Trim(*fDescription, "")+"%")
+		// Description filtering. This can be a single item or a | delimited list
+		// We need to make sure to group these into a single clause using (clause OR clause). #TODO: This is HACKY
+		if strings.Trim(*fDescription, " ") != "" {
+			dFilters := strings.Split(*fDescription, "|")
+			clause := "OR description like ?"
+            dFLen := len(dFilters)
+			if dFLen > 1 {
+				for i := range dFilters {
+					if i == 0 {
+						filters = append(filters, "(" + clause)
+					}else if i == dFLen - 1 {
+						filters = append(filters, clause + ")")
+                    }else {
+						filters = append(filters, clause)
+                    }
+				    filterArgs = append(filterArgs, "%"+strings.Trim(dFilters[i], " ")+"%")
+				}
+			} else {
+				filters = append(filters, clause)
+				filterArgs = append(filterArgs, "%"+strings.Trim(dFilters[0], " ")+"%")
+
+			}
+
 		}
 
 		// Transaction type filtering
