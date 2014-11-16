@@ -72,7 +72,7 @@ func main() {
 		}
 		// Description filtering. This can be a single item or a | delimited list
 		// We need to make sure to group these into a single clause using (clause OR clause). #TODO: This is HACKY
-		if strings.Trim(*fDescription, " ") != "" {
+		if strings.Trim(*fDescription, " ") != " " {
 			dFilters := strings.Split(*fDescription, "|")
 			clause := "OR description like ?"
             dFLen := len(dFilters)
