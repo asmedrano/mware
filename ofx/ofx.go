@@ -9,6 +9,8 @@ Turns these
 <MEMO>SOME Memoi things
 </STMTTRN>
 
+Compatible with capital one and bank of america
+
 into csv:
 TRNTYPE, DTPOSTED, TRNAMT, FITID, NAME, MEMO
 */
@@ -19,10 +21,10 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"strings"
-	"log"
 )
 
 var IN_TAG bool
@@ -39,12 +41,17 @@ func ConvertToCSV(inputPath string, outputPath string) {
 	for scanner.Scan() {
 		l := scanner.Text()
 
-		if strings.Contains(l, "<STMTTRN") {
+		if strings.Contains(l, "<STMTTRN") && !strings.Contains(l, "<STMTTRNRS") {
 			IN_TAG = true
 		}
 		if strings.Contains(l, "</STMTTRN") {
 			IN_TAG = false
-			rows = append(rows, row)
+			if len(row) != 0 {
+			    if len(row) != 6 {
+                    row = append(row, "")
+                }
+				rows = append(rows, row)
+			}
 			row = []string{} // reset row
 		}
 		if IN_TAG && !strings.Contains(l, "<STMTTRN") {

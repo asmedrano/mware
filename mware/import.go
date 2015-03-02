@@ -144,6 +144,67 @@ func (s *CapOneImporter) AccType() string {
 	return "creditcard"
 }
 
+
+type BofAImporter struct {
+	ImportTime time.Time // when this got imported
+}
+
+// BofA importors should convert .ofx dumps to csv first
+func (s *BofAImporter) Import(ofxPath string, db *sql.DB) {
+	tempPath := fmt.Sprintf("/tmp/%v.csv", path.Base(ofxPath))
+	ofx.ConvertToCSV(ofxPath, tempPath)
+	data, err := Read(tempPath)
+	if err != nil {
+		log.Print("Error importing "+ofxPath, "\n", err)
+		return
+	}
+
+	vals := []RowVal{}
+
+	// Transform data from simple to our nomalized version
+	//FIELDS: TRNTYPE, DTPOSTED, TRNAMT, FITID, NAME, MEMO
+	for i := range data.Results {
+		date, _ := data.GetVal("DTPOSTED", data.Results[i])
+		description, _ := data.GetVal("NAME", data.Results[i])
+		amount, _ := data.GetVal("TRNAMT", data.Results[i])
+		key, _ := data.GetVal("FITID", data.Results[i])
+		vals = append(vals, RowVal{
+			Date:        s.Date(date),
+			Amount:      amount,
+			Description: description,
+			Category:    "", // TODO: need to parse description to get this
+			Key:         key,
+			Bank:        s.Bank(),
+			AccType:     s.AccType(),
+		})
+	}
+
+	s.Save(db, vals)
+}
+
+func (s *BofAImporter) Save(db *sql.DB, data []RowVal) {
+	insertRows(db, data)
+}
+
+func (s *BofAImporter) Date(raw string) int64 {
+	// raw looks like: 20140930170000.000
+	year, _ := strconv.Atoi(raw[:4])   // lets assume all these transactions happend in the year 2000+
+	month, _ := strconv.Atoi(raw[4:6]) // lets assume all these transactions happend in the year 2000+
+	day, _ := strconv.Atoi(raw[6:8])   // lets assume all these transactions happend in the year 2000+
+	t := time.Date(year, getMonth(month), day, 0, 0, 0, 0, time.Local)
+	return t.Unix()
+
+}
+
+func (s *BofAImporter) Bank() string {
+	return "BankOfAmerica"
+}
+
+func (s *BofAImporter) AccType() string {
+	return "Checking"
+}
+
+
 func getMonth(num int) time.Month {
 	var m time.Month
 	switch num {

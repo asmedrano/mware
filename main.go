@@ -13,7 +13,7 @@ func main() {
 	task := flag.String("t", "show", "What task to run. Options are <import|show>") // task can be used in conjuntion with task modifiers
 	tm_TransTypeFilter := flag.String("tt", "", "Transaction type filter, credit|debit")
 	// TODO it would be nice to get per task from always being declared
-	bank := flag.String("b", "", "Document Source Bank i.e simple | capone")
+	bank := flag.String("b", "", "Document Source Bank i.e simple | capone | bofa")
 	docPath := flag.String("p", "example.csv", "Path to document")
 	dbPath := flag.String("d", "transactions.db", "Path to db file")
 	startDate := flag.String("start", "", "Start Date, when using <show> task")
@@ -42,7 +42,13 @@ func main() {
 
 				i := mware.CapOneImporter{}
 				i.Import(*docPath, db)
+			}else if iT == "bofa" {
+				log.Println("Importing BofA QFX...")
+
+				i := mware.BofAImporter{}
+				i.Import(*docPath, db)
 			}
+
 			log.Print("Done!")
 		} else {
 			fmt.Print("\nPlease select a bank using `-b` flag\n")
@@ -92,6 +98,9 @@ func main() {
 			case "capone":
 				filters = append(filters, "bank=?")
 				filterArgs = append(filterArgs, "CapitalOne")
+			case "bofa":
+				filters = append(filters, "bank=?")
+				filterArgs = append(filterArgs, "BankOfAmerica")
 			}
 		}
 
