@@ -16,8 +16,8 @@ func main() {
 	bank := flag.String("b", "", "Document Source Bank i.e simple | capone | bofa")
 	docPath := flag.String("p", "example.csv", "Path to document")
 	dbPath := flag.String("d", "transactions.db", "Path to db file")
-	startDate := flag.String("start", "", "Start Date, when using <show> task")
-	endDate := flag.String("end", "", "End Date, when using <show>task")
+	startDate := flag.String("start", "", "Start Date, when using <show> task. Format mm-dd-yyyy")
+	endDate := flag.String("end", "", "End Date, when using <show>task. Format mm-dd-yyyy")
 	groupTransactions := flag.Bool("gt", false, "Group ALL transactions returned by thier descriptions.")
 	fDescription := flag.String("desc", "", "Filter by description")
 
