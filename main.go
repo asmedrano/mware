@@ -11,7 +11,7 @@ import (
 func main() {
 
 	task := flag.String("t", "show", "What task to run. Options are <import|show>") // task can be used in conjuntion with task modifiers
-	tm_TransTypeFilter := flag.String("tt", "", "Transaction type filter, credit|debit")
+	tm_TransTypeFilter := flag.String("tt", "", "Transaction type filter, credits|debits")
 	// TODO it would be nice to get per task from always being declared
 	bank := flag.String("b", "", "Document Source Bank i.e simple | capone | bofa")
 	docPath := flag.String("p", "example.csv", "Path to document")
